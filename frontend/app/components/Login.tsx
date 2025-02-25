@@ -1,7 +1,7 @@
+// components/Login.tsx
 "use client"
 
 import { useState, type FormEvent } from "react"
-import axios from "axios"
 import { useRouter } from "next/navigation"
 
 export default function Login() {
@@ -13,17 +13,21 @@ export default function Login() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
-    try {
-      const response = await axios.post("http://localhost:5000/api/auth/admin/login", { username, password })
-      localStorage.setItem("adminToken", response.data.token)
-      localStorage.setItem("adminUser", JSON.stringify(response.data.user))
-      router.push("/dashboard")
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(`Error logging in: ${error.message}`)
-      } else {
-        setError("An unexpected error occurred")
+    
+    // Static credentials for testing
+    if (username === "admin" && password === "admin") {
+      // Mock user data
+      const mockUser = {
+        username: "admin",
+        role: "admin"
       }
+      
+      // Set mock auth data in localStorage
+      localStorage.setItem("adminToken", "mock-token-for-testing")
+      localStorage.setItem("adminUser", JSON.stringify(mockUser))
+      router.push("/dashboard")
+    } else {
+      setError("Invalid credentials. Use admin/admin for testing.")
     }
   }
 
@@ -77,4 +81,3 @@ export default function Login() {
     </form>
   )
 }
-
