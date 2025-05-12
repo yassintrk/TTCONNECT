@@ -1,9 +1,8 @@
-// components/AnimatedBackground.tsx
 "use client"
 
 import { useEffect, useRef } from "react"
 
-const AnimatedBackground = () => {
+export default function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -13,100 +12,101 @@ const AnimatedBackground = () => {
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Create a non-null alias for the context
-    const nonNullCtx: CanvasRenderingContext2D = ctx
-
-    let animationFrameId: number
-
-    const resizeCanvas = () => {
-      const currentCanvas = canvasRef.current
-      if (!currentCanvas) return
-      currentCanvas.width = window.innerWidth
-      currentCanvas.height = window.innerHeight
+    // Set canvas dimensions
+    const setCanvasDimensions = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
     }
 
-    resizeCanvas()
+    setCanvasDimensions()
+    window.addEventListener("resize", setCanvasDimensions)
 
-    const circles: Circle[] = []
-    const colors = ["#FF6600", "#003366", "#FFA500", "#0066CC"]
-
-    class Circle {
+    // Particle class
+    class Particle {
       x: number
       y: number
-      radius: number
-      dx: number
-      dy: number
+      size: number
+      speedX: number
+      speedY: number
       color: string
 
-      constructor(x: number, y: number, radius: number, color: string) {
-        this.x = x
-        this.y = y
-        this.radius = radius
-        this.dx = (Math.random() - 0.5) * 2
-        this.dy = (Math.random() - 0.5) * 2
-        this.color = color
+      constructor() {
+        this.x = Math.random() * canvas!.width
+        this.y = Math.random() * canvas!.height
+        this.size = Math.random() * 3 + 1
+        this.speedX = Math.random() * 0.5 - 0.25
+        this.speedY = Math.random() * 0.5 - 0.25
+        this.color = `rgba(255, 140, 0, ${Math.random() * 0.2 + 0.1})`
       }
 
-      draw(ctx: CanvasRenderingContext2D) {
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false)
+      update() {
+        this.x += this.speedX
+        this.y += this.speedY
+
+        if (this.x > canvas!.width) this.x = 0
+        else if (this.x < 0) this.x = canvas!.width
+        if (this.y > canvas!.height) this.y = 0
+        else if (this.y < 0) this.y = canvas!.height
+      }
+
+      draw() {
+        if (!ctx) return
         ctx.fillStyle = this.color
+        ctx.beginPath()
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
         ctx.fill()
-        ctx.closePath()
-      }
-
-      update(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
-        if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
-          this.dx = -this.dx
-        }
-        if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
-          this.dy = -this.dy
-        }
-
-        this.x += this.dx
-        this.y += this.dy
-
-        this.draw(ctx)
       }
     }
 
-    for (let i = 0; i < 15; i++) {
-      const radius = Math.random() * 100 + 50
-      const x = Math.random() * (canvas.width - radius * 2) + radius
-      const y = Math.random() * (canvas.height - radius * 2) + radius
-      const color = colors[Math.floor(Math.random() * colors.length)]
-      circles.push(new Circle(x, y, radius, color))
+    // Create particles
+    const particlesArray: Particle[] = []
+    const numberOfParticles = Math.min(100, Math.floor((canvas.width * canvas.height) / 10000))
+
+    for (let i = 0; i < numberOfParticles; i++) {
+      particlesArray.push(new Particle())
     }
 
+    // Connect particles with lines
+    function connect() {
+      const maxDistance = 150
+      for (let a = 0; a < particlesArray.length; a++) {
+        for (let b = a; b < particlesArray.length; b++) {
+          const dx = particlesArray[a].x - particlesArray[b].x
+          const dy = particlesArray[a].y - particlesArray[b].y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+
+          if (distance < maxDistance) {
+            if (!ctx) return
+            ctx.strokeStyle = `rgba(255, 140, 0, ${0.1 * (1 - distance / maxDistance)})`
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            ctx.moveTo(particlesArray[a].x, particlesArray[a].y)
+            ctx.lineTo(particlesArray[b].x, particlesArray[b].y)
+            ctx.stroke()
+          }
+        }
+      }
+    }
+
+    // Animation loop
     function animate() {
-      const currentCanvas = canvasRef.current
-      if (!currentCanvas) return
+      if (!ctx || !canvas) return
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      animationFrameId = requestAnimationFrame(animate)
-      nonNullCtx.clearRect(0, 0, currentCanvas.width, currentCanvas.height)
-
-      circles.forEach((circle) => {
-        circle.update(nonNullCtx, currentCanvas)
-      })
+      for (let i = 0; i < particlesArray.length; i++) {
+        particlesArray[i].update()
+        particlesArray[i].draw()
+      }
+      connect()
+      requestAnimationFrame(animate)
     }
 
     animate()
 
-    window.addEventListener("resize", resizeCanvas)
-
     return () => {
-      window.removeEventListener("resize", resizeCanvas)
-      cancelAnimationFrame(animationFrameId)
+      window.removeEventListener("resize", setCanvasDimensions)
     }
   }, [])
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute top-0 left-0 w-full h-full opacity-20"
-      style={{ filter: "blur(50px)" }}
-    />
-  )
+  return <canvas ref={canvasRef} className="absolute inset-0 bg-gradient-to-b from-gray-900 to-gray-800" />
 }
-
-export default AnimatedBackground
