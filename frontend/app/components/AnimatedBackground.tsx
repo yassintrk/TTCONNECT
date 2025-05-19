@@ -30,9 +30,9 @@ export default function AnimatedBackground() {
       speedY: number
       color: string
 
-      constructor() {
-        this.x = Math.random() * canvas!.width
-        this.y = Math.random() * canvas!.height
+      constructor(canvasWidth: number, canvasHeight: number) {
+        this.x = Math.random() * canvasWidth
+        this.y = Math.random() * canvasHeight
         this.size = Math.random() * 3 + 1
         this.speedX = Math.random() * 0.5 - 0.25
         this.speedY = Math.random() * 0.5 - 0.25
@@ -43,18 +43,20 @@ export default function AnimatedBackground() {
         this.x += this.speedX
         this.y += this.speedY
 
-        if (this.x > canvas!.width) this.x = 0
-        else if (this.x < 0) this.x = canvas!.width
-        if (this.y > canvas!.height) this.y = 0
-        else if (this.y < 0) this.y = canvas!.height
+        const width = canvas?.width ?? 0
+        const height = canvas?.height ?? 0
+
+        if (this.x > width) this.x = 0
+        else if (this.x < 0) this.x = width
+        if (this.y > height) this.y = 0
+        else if (this.y < 0) this.y = height
       }
 
       draw() {
-        if (!ctx) return
-        ctx.fillStyle = this.color
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-        ctx.fill()
+        ctx!.fillStyle = this.color
+        ctx!.beginPath()
+        ctx!.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+        ctx!.fill()
       }
     }
 
@@ -63,7 +65,7 @@ export default function AnimatedBackground() {
     const numberOfParticles = Math.min(100, Math.floor((canvas.width * canvas.height) / 10000))
 
     for (let i = 0; i < numberOfParticles; i++) {
-      particlesArray.push(new Particle())
+      particlesArray.push(new Particle(canvas.width, canvas.height))
     }
 
     // Connect particles with lines
@@ -76,37 +78,43 @@ export default function AnimatedBackground() {
           const distance = Math.sqrt(dx * dx + dy * dy)
 
           if (distance < maxDistance) {
-            if (!ctx) return
-            ctx.strokeStyle = `rgba(255, 140, 0, ${0.1 * (1 - distance / maxDistance)})`
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.moveTo(particlesArray[a].x, particlesArray[a].y)
-            ctx.lineTo(particlesArray[b].x, particlesArray[b].y)
-            ctx.stroke()
+            ctx!.strokeStyle = `rgba(255, 140, 0, ${0.1 * (1 - distance / maxDistance)})`
+            ctx!.lineWidth = 1
+            ctx!.beginPath()
+            ctx!.moveTo(particlesArray[a].x, particlesArray[a].y)
+            ctx!.lineTo(particlesArray[b].x, particlesArray[b].y)
+            ctx!.stroke()
           }
         }
       }
     }
 
     // Animation loop
+    let animationFrameId: number
+
     function animate() {
-      if (!ctx || !canvas) return
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      if (canvas) {
+        ctx!.clearRect(0, 0, canvas.width, canvas.height)
+      }
 
       for (let i = 0; i < particlesArray.length; i++) {
         particlesArray[i].update()
         particlesArray[i].draw()
       }
       connect()
-      requestAnimationFrame(animate)
+      animationFrameId = requestAnimationFrame(animate)
     }
 
     animate()
 
+    // Cleanup function
     return () => {
       window.removeEventListener("resize", setCanvasDimensions)
+      cancelAnimationFrame(animationFrameId)
     }
   }, [])
 
-  return <canvas ref={canvasRef} className="absolute inset-0 bg-gradient-to-b from-gray-900 to-gray-800" />
+  return (
+    <canvas ref={canvasRef} className="fixed inset-0 w-full h-full z-[-1] bg-gradient-to-b from-gray-900 to-gray-800" />
+  )
 }
