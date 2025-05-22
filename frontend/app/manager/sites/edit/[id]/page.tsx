@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { ManagerLayout } from "@/components/manager/layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,12 +16,71 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/components/ui/use-toast"
 import { ArrowLeft, Plus, Save, Trash } from "lucide-react"
 
-export default function AddSitePage() {
+// Mock data for a site
+const mockSite = {
+  id: "TUN-GSM-042",
+  name: "Tunis Centre",
+  address: "Avenue Habib Bourguiba, Tunis",
+  coordinates: "36.8065, 10.1815",
+  description: "Site principal couvrant le centre-ville de Tunis",
+  category: "macro",
+  type: "outdoor",
+  status: "active",
+  technologies: ["2G", "3G", "4G"],
+  equipment: {
+    antennas: [
+      {
+        id: "ant-1",
+        model: "Huawei ATR4518R6",
+        type: "sector",
+        band: "900MHz",
+        status: "operational",
+      },
+      {
+        id: "ant-2",
+        model: "Nokia AAHF",
+        type: "panel",
+        band: "1800MHz",
+        status: "operational",
+      },
+    ],
+    transmission: [
+      {
+        id: "trans-1",
+        model: "Huawei OptiX RTN 950",
+        type: "microwave",
+        capacity: "1Gbps",
+        status: "operational",
+      },
+    ],
+    radio: [
+      {
+        id: "radio-1",
+        model: "Huawei BBU3900",
+        type: "bbu",
+        technology: "multi",
+        status: "operational",
+      },
+      {
+        id: "radio-2",
+        model: "Huawei RRU3953",
+        type: "rru",
+        technology: "4G",
+        status: "operational",
+      },
+    ],
+  },
+}
+
+export default function EditSitePage() {
   const router = useRouter()
+  const params = useParams()
+  const siteId = params.id as string
+
   const [isLoading, setIsLoading] = useState(true)
+  const [site, setSite] = useState<any>(null)
 
   // Site basic information
-  const [siteId, setSiteId] = useState("")
   const [siteName, setSiteName] = useState("")
   const [siteAddress, setSiteAddress] = useState("")
   const [siteCoordinates, setSiteCoordinates] = useState("")
@@ -39,15 +98,9 @@ export default function AddSitePage() {
   })
 
   // Site equipment
-  const [antennas, setAntennas] = useState([{ id: "1", model: "", type: "", band: "", status: "operational" }])
-
-  const [transmissionEquipment, setTransmissionEquipment] = useState([
-    { id: "1", model: "", type: "", capacity: "", status: "operational" },
-  ])
-
-  const [radioEquipment, setRadioEquipment] = useState([
-    { id: "1", model: "", type: "", technology: "", status: "operational" },
-  ])
+  const [antennas, setAntennas] = useState<any[]>([])
+  const [transmissionEquipment, setTransmissionEquipment] = useState<any[]>([])
+  const [radioEquipment, setRadioEquipment] = useState<any[]>([])
 
   useEffect(() => {
     // Vérifier si l'utilisateur est authentifié
@@ -67,12 +120,39 @@ export default function AddSitePage() {
         return
       }
 
+      // In a real application, you would fetch the site data from your API
+      // For this example, we'll use mock data
+      setSite(mockSite)
+
+      // Initialize form with site data
+      setSiteName(mockSite.name)
+      setSiteAddress(mockSite.address)
+      setSiteCoordinates(mockSite.coordinates)
+      setSiteDescription(mockSite.description || "")
+      setSiteCategory(mockSite.category)
+      setSiteType(mockSite.type)
+      setSiteStatus(mockSite.status)
+
+      // Initialize technologies
+      const techObj = {
+        "2G": mockSite.technologies.includes("2G"),
+        "3G": mockSite.technologies.includes("3G"),
+        "4G": mockSite.technologies.includes("4G"),
+        "5G": mockSite.technologies.includes("5G"),
+      }
+      setTechnologies(techObj)
+
+      // Initialize equipment
+      setAntennas(mockSite.equipment.antennas)
+      setTransmissionEquipment(mockSite.equipment.transmission)
+      setRadioEquipment(mockSite.equipment.radio)
+
       setIsLoading(false)
     } catch (error) {
       console.error("Error parsing user data:", error)
       router.push("/login")
     }
-  }, [router])
+  }, [router, siteId])
 
   // Handle antenna equipment
   const addAntenna = () => {
@@ -180,7 +260,7 @@ export default function AddSitePage() {
     e.preventDefault()
 
     // Validation
-    if (!siteId || !siteName || !siteAddress || !siteCoordinates) {
+    if (!siteName || !siteAddress || !siteCoordinates) {
       toast({
         title: "Erreur de validation",
         description: "Veuillez remplir tous les champs obligatoires.",
@@ -200,8 +280,8 @@ export default function AddSitePage() {
       return
     }
 
-    // Create site object
-    const siteData = {
+    // Create updated site object
+    const updatedSite = {
       id: siteId,
       name: siteName,
       address: siteAddress,
@@ -218,16 +298,16 @@ export default function AddSitePage() {
         transmission: transmissionEquipment,
         radio: radioEquipment,
       },
-      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
 
     // In a real application, you would send this data to your backend
-    console.log("Site data:", siteData)
+    console.log("Updated site data:", updatedSite)
 
     // Show success message
     toast({
-      title: "Site ajouté avec succès",
-      description: `Le site ${siteName} (${siteId}) a été ajouté.`,
+      title: "Site mis à jour avec succès",
+      description: `Le site ${siteName} (${siteId}) a été mis à jour.`,
     })
 
     // Redirect to sites list
@@ -252,8 +332,8 @@ export default function AddSitePage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Ajouter un site GSM</h2>
-            <p className="text-muted-foreground">Créez un nouveau site avec tous ses équipements</p>
+            <h2 className="text-2xl font-bold tracking-tight">Modifier le site {siteId}</h2>
+            <p className="text-muted-foreground">Modifiez les informations et équipements du site</p>
           </div>
           <Button variant="outline" onClick={() => router.push("/manager/sites")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -276,21 +356,14 @@ export default function AddSitePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Informations générales du site</CardTitle>
-                  <CardDescription>Entrez les informations de base du site GSM</CardDescription>
+                  <CardDescription>Modifiez les informations de base du site GSM</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="siteId">
-                        ID du site <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="siteId"
-                        placeholder="Ex: TUN-GSM-042"
-                        value={siteId}
-                        onChange={(e) => setSiteId(e.target.value)}
-                        required
-                      />
+                      <Label htmlFor="siteId">ID du site</Label>
+                      <Input id="siteId" value={siteId} disabled className="bg-gray-100" />
+                      <p className="text-xs text-muted-foreground">L'ID du site ne peut pas être modifié</p>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="siteName">
@@ -376,6 +449,7 @@ export default function AddSitePage() {
                           <SelectItem value="maintenance">En maintenance</SelectItem>
                           <SelectItem value="inactive">Inactif</SelectItem>
                           <SelectItem value="planned">Planifié</SelectItem>
+                          <SelectItem value="archived">Archivé</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -389,7 +463,7 @@ export default function AddSitePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Technologies du site</CardTitle>
-                  <CardDescription>Sélectionnez les technologies disponibles sur ce site</CardDescription>
+                  <CardDescription>Modifiez les technologies disponibles sur ce site</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -466,7 +540,7 @@ export default function AddSitePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Antennes</CardTitle>
-                  <CardDescription>Ajoutez les antennes installées sur ce site</CardDescription>
+                  <CardDescription>Modifiez les antennes installées sur ce site</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
@@ -563,7 +637,7 @@ export default function AddSitePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Équipement de transmission</CardTitle>
-                  <CardDescription>Ajoutez les équipements de transmission installés sur ce site</CardDescription>
+                  <CardDescription>Modifiez les équipements de transmission installés sur ce site</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
@@ -664,7 +738,7 @@ export default function AddSitePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Équipement radio</CardTitle>
-                  <CardDescription>Ajoutez les équipements radio installés sur ce site</CardDescription>
+                  <CardDescription>Modifiez les équipements radio installés sur ce site</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
@@ -777,7 +851,7 @@ export default function AddSitePage() {
             </Button>
             <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
               <Save className="h-4 w-4 mr-2" />
-              Enregistrer le site
+              Enregistrer les modifications
             </Button>
           </div>
         </form>

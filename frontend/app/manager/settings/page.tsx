@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { TechnicianLayout } from "@/components/technician/layout"
+import { ManagerLayout } from "@/components/manager/layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -55,7 +55,7 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [position, setPosition] = useState("")
-  const [specialization, setSpecialization] = useState("")
+  const [department, setDepartment] = useState("")
   const [bio, setBio] = useState("")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -74,8 +74,8 @@ export default function SettingsPage() {
 
     try {
       const user = JSON.parse(userStr)
-      // Vérifier si l'utilisateur est un technicien
-      if (user.role !== "technician") {
+      // Vérifier si l'utilisateur est un manager
+      if (user.role !== "manager") {
         router.push("/login")
         return
       }
@@ -83,12 +83,12 @@ export default function SettingsPage() {
       setUserData(user)
 
       // Initialize user profile data
-      setFullName(user.fullName || "Ahmed Benali")
-      setEmail(user.email || "ahmed.benali@tunisietelecom.tn")
-      setPhone(user.phone || "+216 98 123 456")
-      setPosition(user.position || "Technicien Senior")
-      setSpecialization(user.specialization || "Radio")
-      setBio(user.bio || "Technicien senior spécialisé dans les équipements radio avec 8 ans d'expérience.")
+      setFullName(user.fullName || "Nidhal Nsiri")
+      setEmail(user.email || "nidhal.nsiri@tunisietelecom.tn")
+      setPhone(user.phone || "+216 98 765 432")
+      setPosition(user.position || "Manager Régional")
+      setDepartment(user.department || "Opérations Réseau")
+      setBio(user.bio || "Manager régional responsable des opérations réseau pour la région de Tunis.")
 
       // Load settings from localStorage if available
       const savedSettings = localStorage.getItem("userSettings")
@@ -185,7 +185,7 @@ export default function SettingsPage() {
       email,
       phone,
       position,
-      specialization,
+      department,
       bio,
     }
 
@@ -304,7 +304,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <TechnicianLayout>
+    <ManagerLayout>
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Paramètres</h2>
@@ -467,21 +467,21 @@ export default function SettingsPage() {
                         </Label>
                       </div>
                       <div>
-                        <RadioGroupItem value="tickets" id="view-tickets" className="peer sr-only" />
-                        <Label
-                          htmlFor="view-tickets"
-                          className="flex items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                        >
-                          Tickets
-                        </Label>
-                      </div>
-                      <div>
                         <RadioGroupItem value="sites" id="view-sites" className="peer sr-only" />
                         <Label
                           htmlFor="view-sites"
                           className="flex items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                         >
-                          Sites assignés
+                          Sites GSM
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem value="map" id="view-map" className="peer sr-only" />
+                        <Label
+                          htmlFor="view-map"
+                          className="flex items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                        >
+                          Carte des sites
                         </Label>
                       </div>
                     </RadioGroup>
@@ -551,20 +551,20 @@ export default function SettingsPage() {
                     <Label>Types de notifications</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-center space-x-2">
-                        <Checkbox id="notify-new-interventions" defaultChecked disabled={!notificationsEnabled} />
-                        <Label htmlFor="notify-new-interventions">Nouvelles interventions assignées</Label>
+                        <Checkbox id="notify-interventions" defaultChecked disabled={!notificationsEnabled} />
+                        <Label htmlFor="notify-interventions">Nouvelles interventions</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Checkbox id="notify-intervention-updates" defaultChecked disabled={!notificationsEnabled} />
-                        <Label htmlFor="notify-intervention-updates">Mises à jour d'interventions</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="notify-urgent-tickets" defaultChecked disabled={!notificationsEnabled} />
-                        <Label htmlFor="notify-urgent-tickets">Tickets urgents</Label>
+                        <Checkbox id="notify-status-changes" defaultChecked disabled={!notificationsEnabled} />
+                        <Label htmlFor="notify-status-changes">Changements de statut</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Checkbox id="notify-site-issues" defaultChecked disabled={!notificationsEnabled} />
-                        <Label htmlFor="notify-site-issues">Problèmes sur les sites assignés</Label>
+                        <Label htmlFor="notify-site-issues">Problèmes sur les sites</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="notify-reports" defaultChecked disabled={!notificationsEnabled} />
+                        <Label htmlFor="notify-reports">Nouveaux rapports</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Checkbox id="notify-system" defaultChecked disabled={!notificationsEnabled} />
@@ -572,7 +572,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Checkbox id="notify-reminders" defaultChecked disabled={!notificationsEnabled} />
-                        <Label htmlFor="notify-reminders">Rappels d'interventions</Label>
+                        <Label htmlFor="notify-reminders">Rappels</Label>
                       </div>
                     </div>
                   </div>
@@ -672,9 +672,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <h3 className="text-lg font-medium">{fullName}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {position} - {specialization}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{position}</p>
                     </div>
                   </div>
 
@@ -696,19 +694,8 @@ export default function SettingsPage() {
                       <Input id="position" value={position} onChange={(e) => setPosition(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="specialization">Spécialisation</Label>
-                      <select
-                        id="specialization"
-                        value={specialization}
-                        onChange={(e) => setSpecialization(e.target.value)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="Radio">Radio</option>
-                        <option value="Transmission">Transmission</option>
-                        <option value="Énergie">Énergie</option>
-                        <option value="Antennes">Antennes</option>
-                        <option value="Fibre optique">Fibre optique</option>
-                      </select>
+                      <Label htmlFor="department">Département</Label>
+                      <Input id="department" value={department} onChange={(e) => setDepartment(e.target.value)} />
                     </div>
                   </div>
 
@@ -851,7 +838,7 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </TechnicianLayout>
+    </ManagerLayout>
   )
 }
 

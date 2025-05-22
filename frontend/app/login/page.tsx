@@ -3,7 +3,9 @@
 import { useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { AlertCircle, Eye, EyeOff } from "lucide-react"
-import AnimatedBackground from "../components/AnimatedBackground"
+import AnimatedBackground from "@/components/AnimatedBackground"
+import { Toaster } from "@/components/ui/toaster"
+import { toast } from "@/components/ui/use-toast"
 
 export default function Login() {
   const [username, setUsername] = useState<string>("")
@@ -33,6 +35,11 @@ export default function Login() {
         localStorage.setItem("adminToken", `admin-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`)
         localStorage.setItem("adminUser", JSON.stringify(adminUser))
 
+        toast({
+          title: "Connexion réussie",
+          description: `Bienvenue, ${adminUser.fullName}!`,
+        })
+
         // Redirection vers le tableau de bord admin
         router.push("/admin")
       }
@@ -43,12 +50,21 @@ export default function Login() {
           username: "nidhal",
           role: "manager",
           fullName: "Nidhal Nsiri",
+          email: "nidhal.nsiri@tunisietelecom.tn",
+          phone: "+216 98 765 432",
+          position: "Manager Régional",
+          department: "Opérations Réseau",
           lastLogin: new Date().toISOString(),
         }
 
         // Stockage des données d'authentification
         localStorage.setItem("adminToken", `manager-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`)
         localStorage.setItem("adminUser", JSON.stringify(managerUser))
+
+        toast({
+          title: "Connexion réussie",
+          description: `Bienvenue, ${managerUser.fullName}!`,
+        })
 
         // Redirection vers le tableau de bord manager
         router.push("/manager")
@@ -60,12 +76,21 @@ export default function Login() {
           username: "ahmed",
           role: "technician",
           fullName: "Ahmed Benali",
+          email: "ahmed.benali@tunisietelecom.tn",
+          phone: "+216 98 123 456",
+          position: "Technicien Senior",
+          specialization: "Radio",
           lastLogin: new Date().toISOString(),
         }
 
         // Stockage des données d'authentification
         localStorage.setItem("adminToken", `technician-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`)
         localStorage.setItem("adminUser", JSON.stringify(technicianUser))
+
+        toast({
+          title: "Connexion réussie",
+          description: `Bienvenue, ${technicianUser.fullName}!`,
+        })
 
         // Redirection vers le tableau de bord technicien
         router.push("/technician")
@@ -76,13 +101,20 @@ export default function Login() {
         const mockUser = {
           username: "admin",
           role: "manager",
+          fullName: "Administrateur",
           lastLogin: new Date().toISOString(),
         }
 
         // Set mock auth data in localStorage
         localStorage.setItem("adminToken", "mock-token-for-testing")
         localStorage.setItem("adminUser", JSON.stringify(mockUser))
-        router.push("/dashboard")
+
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue, Administrateur!",
+        })
+
+        router.push("/manager")
       } else {
         setError("Identifiants invalides. Veuillez réessayer.")
       }
@@ -104,7 +136,7 @@ export default function Login() {
               {/* Logo Tunisie Telecom */}
               <div className="flex justify-center mb-4">
                 <img
-                  src="https://www.vhv.rs/dpng/d/328-3285590_simple-mobile-logo-telecommunications-logonoidcom-tunisie-telecom-logo.png"
+                  src="/placeholder.svg?height=96&width=200"
                   alt="Tunisie Telecom Logo"
                   className="h-24 w-auto object-contain"
                 />
@@ -185,6 +217,7 @@ export default function Login() {
           </div>
         </div>
       </div>
+      <Toaster />
     </>
   )
 }
